@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DGSS Live Tracking</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ---------------- login ---------------- -->
+  <div id="login">
+    <form class="card" id="loginForm">
+      <h1>DGSS Live Tracking</h1>
+      <p class="sub">Supervisor sign in</p>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required />
+
+      <button class="btn-primary" id="loginBtn" type="submit">Sign in</button>
+      <div class="error" id="loginError"></div>
+    </form>
+  </div>
+
+  <!-- ---------------- dashboard ---------------- -->
+  <div id="shell">
+    <aside>
+      <header class="bar">
+        <h2>Guards on duty</h2>
+        <button class="linkish" id="signOut" type="button">Sign out</button>
+      </header>
+
+      <div class="counts">
+        <div class="pill"><b id="cLive">0</b><span>LIVE</span></div>
+        <div class="pill"><b id="cStale">0</b><span>DELAYED</span></div>
+        <div class="pill"><b id="cOff">0</b><span>OFFLINE</span></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" id="tabGuards" type="button">Guards</button>
+        <button class="tab" id="tabScans" type="button">Checkpoint scans</button>
+      </div>
+
+      <div class="search">
+        <input id="filter" type="search" placeholder="Search name, badge or site" />
+      </div>
+
+      <div id="list"></div>
+      <div id="scanList" hidden></div>
+    </aside>
+
+    <main>
+      <div id="map"></div>
+
+      <div class="overlay">
+        <button id="btnLive" class="on" type="button">Live</button>
+        <input type="date" id="histDate" />
+        <button id="btnHist" type="button">Show track</button>
+      </div>
+
+      <div class="legend">
+        <div><span class="dot ok"></span> Reporting now</div>
+        <div><span class="dot warn"></span> Delayed</div>
+        <div><span class="dot off"></span> Offline</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
