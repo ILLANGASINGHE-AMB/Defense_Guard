@@ -6,8 +6,8 @@
 // Never put the service_role key in this file.
 // ---------------------------------------------------------------------------
 window.DGSS_CONFIG = {
-  SUPABASE_URL: "https://YOUR-PROJECT.supabase.co",
-  SUPABASE_ANON_KEY: "YOUR_ANON_KEY",
+  SUPABASE_URL: "https://lbjidikkfofhhubqvwje.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiamlkaWtrZm9maGh1YnF2d2plIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNTMyMDgsImV4cCI6MjEwNDYyOTIwOH0.XhDuYGWCmoZUAZYffNdJ-5SQVlqt4ogaotZPiZ8Gq5s",
 
   // A guard is treated as live if their last fix is newer than this.
   FRESH_SECONDS: 150,
