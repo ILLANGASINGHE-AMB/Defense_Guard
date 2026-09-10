@@ -24,7 +24,24 @@ const els = {
   histDate: document.getElementById('histDate'),
   tabGuards: document.getElementById('tabGuards'),
   tabScans: document.getElementById('tabScans'),
-  scanList: document.getElementById('scanList')
+  scanList: document.getElementById('scanList'),
+  manageBtn: document.getElementById('manageBtn'),
+  manage: document.getElementById('manage'),
+  manageClose: document.getElementById('manageClose'),
+  guardForm: document.getElementById('guardForm'),
+  gEditing: document.getElementById('gEditing'),
+  gUser: document.getElementById('gUser'),
+  gPass: document.getElementById('gPass'),
+  gName: document.getElementById('gName'),
+  gBadge: document.getElementById('gBadge'),
+  gSite: document.getElementById('gSite'),
+  gPhone: document.getElementById('gPhone'),
+  gSave: document.getElementById('gSave'),
+  gCancel: document.getElementById('gCancel'),
+  gError: document.getElementById('gError'),
+  gOk: document.getElementById('gOk'),
+  gHint: document.getElementById('gHint'),
+  gBody: document.getElementById('gBody')
 };
 
 let sb = null;
@@ -39,6 +56,7 @@ let tickTimer = null;
 let scans = [];
 let scanMarker = null;
 let activeTab = 'guards';
+let roster = [];
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -97,14 +115,19 @@ els.loginForm.addEventListener('submit', async (e) => {
   els.loginBtn.disabled = true;
   els.loginBtn.textContent = 'Signing in...';
 
+  // Supervisors log in with a short username too. Anything without an "@"
+  // gets the hidden domain appended, matching what the phone app does.
+  const typed = els.email.value.trim().toLowerCase();
+  const email = typed.includes('@') ? typed : `${typed}@dgss.local`;
+
   const { error } = await sb.auth.signInWithPassword({
-    email: els.email.value.trim(),
+    email,
     password: els.password.value
   });
 
   if (error) {
     fail(error.message === 'Invalid login credentials'
-      ? 'Incorrect email or password.' : error.message);
+      ? 'Incorrect username or password.' : error.message);
     els.loginBtn.disabled = false;
     els.loginBtn.textContent = 'Sign in';
     return;
@@ -507,5 +530,197 @@ els.tabScans.addEventListener('click', () => switchTab('scans'));
 els.filter.addEventListener('input', () => {
   if (activeTab === 'guards') renderList(); else renderScans();
 });
+
+
+/* ==========================================================================
+   Guard management. Every call below is refused by the database unless the
+   signed-in account is a supervisor, so this UI is a convenience rather than
+   the thing enforcing the rule.
+   ========================================================================== */
+
+function gMessage(el, text) {
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+function clearGuardForm() {
+  els.gEditing.value = '';
+  els.guardForm.reset();
+  els.gUser.disabled = false;
+  els.gSave.textContent = 'Add guard';
+  els.gCancel.hidden = true;
+  els.gHint.textContent =
+    'The guard types the username and password into the app. Nothing else.';
+  gMessage(els.gError, '');
+  gMessage(els.gOk, '');
+}
+
+async function openManage() {
+  els.manage.hidden = false;
+  clearGuardForm();
+  await loadRoster();
+}
+
+async function loadRoster() {
+  const { data, error } = await sb.rpc('list_guards');
+  if (error) {
+    els.gBody.innerHTML =
+      `<tr><td colspan="7">Could not load guards. ${esc(error.message)}</td></tr>`;
+    return;
+  }
+  roster = data || [];
+  renderRoster();
+}
+
+function renderRoster() {
+  if (!roster.length) {
+    els.gBody.innerHTML = '<tr><td colspan="7">No guards yet. Add one above.</td></tr>';
+    return;
+  }
+  els.gBody.innerHTML = roster.map(g => `
+    <tr class="${g.active ? '' : 'off'}">
+      <td><span class="uname">${esc(g.username)}</span></td>
+      <td>${esc(g.full_name)}</td>
+      <td>${esc(g.badge_no || '')}</td>
+      <td>${esc(g.site || '')}</td>
+      <td class="num">${g.positions}</td>
+      <td><span class="tag ${g.active ? 'on' : 'off'}">${g.active ? 'Active' : 'Retired'}</span></td>
+      <td style="text-align:right">
+        <button class="rowbtn" data-act="edit" data-u="${esc(g.username)}">Edit</button>
+        <button class="rowbtn" data-act="toggle" data-u="${esc(g.username)}">${g.active ? 'Retire' : 'Restore'}</button>
+        <button class="rowbtn danger" data-act="delete" data-u="${esc(g.username)}">Delete</button>
+      </td>
+    </tr>`).join('');
+
+  els.gBody.querySelectorAll('.rowbtn').forEach(btn => {
+    btn.addEventListener('click', () => rowAction(btn.dataset.act, btn.dataset.u));
+  });
+}
+
+async function rowAction(act, username) {
+  const g = roster.find(x => x.username === username);
+  if (!g) return;
+
+  if (act === 'edit') {
+    els.gEditing.value = username;
+    els.gUser.value = username;
+    els.gUser.disabled = true;          // the username is the identity, so it is fixed
+    els.gName.value = g.full_name || '';
+    els.gBadge.value = g.badge_no || '';
+    els.gSite.value = g.site || '';
+    els.gPhone.value = g.phone || '';
+    els.gPass.value = '';
+    els.gSave.textContent = 'Save changes';
+    els.gCancel.hidden = false;
+    els.gHint.textContent =
+      'Leave the password blank to keep the current one. Type a new one to reset it.';
+    gMessage(els.gError, '');
+    gMessage(els.gOk, '');
+    els.gName.focus();
+    return;
+  }
+
+  if (act === 'toggle') {
+    const fn = g.active ? 'retire_guard' : 'reinstate_guard';
+    const { error } = await sb.rpc(fn, { username });
+    if (error) { alert(error.message); return; }
+    await loadRoster();
+    await loadGuards();
+    return;
+  }
+
+  if (act === 'delete') {
+    const warn =
+      `Delete guard "${username}" (${g.full_name})?\n\n` +
+      `This also deletes ${g.positions} recorded positions and ${g.scans} checkpoint scans. ` +
+      `It cannot be undone.\n\n` +
+      `To keep their history instead, choose Retire.`;
+    if (!confirm(warn)) return;
+    if (prompt(`Type the username "${username}" to confirm deletion:`) !== username) return;
+
+    const { data, error } = await sb.rpc('delete_guard', { username });
+    if (error) { alert(error.message); return; }
+    await loadRoster();
+    await loadGuards();
+    alert(data);
+  }
+}
+
+els.guardForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  gMessage(els.gError, '');
+  gMessage(els.gOk, '');
+
+  const editing = els.gEditing.value;
+  const username = els.gUser.value.trim();
+  const password = els.gPass.value.trim();
+  const name = els.gName.value.trim();
+
+  if (!username || !name) {
+    gMessage(els.gError, 'Username and full name are required.');
+    return;
+  }
+  if (!editing && !password) {
+    gMessage(els.gError, 'A password is required for a new guard.');
+    return;
+  }
+  if (/[@\s]/.test(username)) {
+    gMessage(els.gError, 'Username cannot contain spaces or an @ sign.');
+    return;
+  }
+
+  els.gSave.disabled = true;
+
+  // add_guard both creates and updates, but it always resets the password.
+  // When editing without a new password, keep the existing one by reusing it
+  // is impossible, so the details are updated through the guards table instead.
+  let error = null;
+  if (editing && !password) {
+    ({ error } = await sb.from('guards').update({
+      full_name: name,
+      badge_no: els.gBadge.value.trim() || null,
+      site: els.gSite.value.trim() || null,
+      phone: els.gPhone.value.trim() || null
+    }).eq('id', roster.find(x => x.username === editing).guard_id));
+  } else {
+    ({ error } = await sb.rpc('add_guard', {
+      username,
+      password,
+      full_name: name,
+      badge_no: els.gBadge.value.trim() || null,
+      site: els.gSite.value.trim() || null,
+      phone: els.gPhone.value.trim() || null
+    }));
+  }
+
+  els.gSave.disabled = false;
+
+  if (error) {
+    gMessage(els.gError, error.message);
+    return;
+  }
+
+  gMessage(els.gOk, editing
+    ? `Saved changes for "${username}".`
+    : `Guard "${username}" can now sign in with password "${password}".`);
+
+  const keep = els.gOk.textContent;
+  clearGuardForm();
+  gMessage(els.gOk, keep);
+
+  await loadRoster();
+  await loadGuards();
+});
+
+els.gCancel.addEventListener('click', clearGuardForm);
+els.manageBtn.addEventListener('click', openManage);
+els.manageClose.addEventListener('click', () => { els.manage.hidden = true; });
+els.manage.addEventListener('click', (e) => {
+  if (e.target === els.manage) els.manage.hidden = true;
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !els.manage.hidden) els.manage.hidden = true;
+});
+
 
 boot();

@@ -185,3 +185,78 @@ main { position: relative; min-width: 0; }
   background: #3a1d1c; border-radius: 5px; padding: 4px 8px; display: inline-block;
 }
 .scan .sms { margin-top: 5px; font-size: 12px; color: var(--muted); }
+
+/* ---------- management sheet ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal[hidden] { display: none; }
+.sheet {
+  width: min(940px, 100%); max-height: 90vh;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
+}
+.sheet-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+}
+.sheet-head h2 { margin: 0; font-size: 17px; flex: 1; }
+.sheet-body { padding: 20px; overflow-y: auto; }
+
+.gform { margin-bottom: 24px; }
+.gform .grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 14px;
+}
+.gform .grid .wide { grid-column: span 1; }
+.gform label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.gform input {
+  width: 100%; padding: 9px 11px; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; color: var(--fg); font-size: 14px;
+}
+.gform input:focus { outline: none; border-color: var(--accent); }
+.gform .hint { color: var(--muted); font-size: 12px; margin: 12px 0 0; }
+.gform .actions { display: flex; gap: 10px; margin-top: 14px; }
+.gform .actions .btn-primary { width: auto; padding: 10px 22px; }
+.btn-ghost {
+  padding: 10px 18px; border-radius: 8px; font-size: 14px;
+  background: none; border: 1px solid var(--line); color: var(--fg);
+}
+.ok {
+  margin-top: 14px; padding: 10px 12px; border-radius: 8px;
+  background: #12301f; border: 1px solid var(--ok);
+  color: #b6f0d0; font-size: 13px; display: none;
+}
+
+.tablewrap { overflow-x: auto; border-top: 1px solid var(--line); padding-top: 8px; }
+#gTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+#gTable th {
+  text-align: left; padding: 9px 10px; color: var(--muted);
+  font-weight: 600; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; white-space: nowrap;
+}
+#gTable td { padding: 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+#gTable td.num, #gTable th.num { text-align: right; }
+#gTable .uname {
+  font-weight: 700; background: var(--panel-2);
+  padding: 2px 8px; border-radius: 5px;
+}
+#gTable tr.off { opacity: .5; }
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px;
+  font-weight: 600;
+}
+.tag.on { background: #12301f; color: #7ddba6; }
+.tag.off { background: var(--panel-2); color: var(--muted); }
+.rowbtn {
+  background: none; border: 1px solid var(--line); color: var(--fg);
+  border-radius: 6px; padding: 5px 10px; font-size: 12px; margin-left: 6px;
+}
+.rowbtn:hover { border-color: var(--accent); }
+.rowbtn.danger { color: var(--danger); }
+.rowbtn.danger:hover { border-color: var(--danger); }
+
+@media (max-width: 720px) {
+  .gform .grid { grid-template-columns: 1fr 1fr; }
+}

@@ -15,8 +15,8 @@
       <h1>DGSS Live Tracking</h1>
       <p class="sub">Supervisor sign in</p>
 
-      <label for="email">Email</label>
-      <input id="email" type="email" autocomplete="username" required />
+      <label for="email">Username</label>
+      <input id="email" type="text" autocomplete="username" required />
 
       <label for="password">Password</label>
       <input id="password" type="password" autocomplete="current-password" required />
@@ -31,6 +31,7 @@
     <aside>
       <header class="bar">
         <h2>Guards on duty</h2>
+        <button class="linkish" id="manageBtn" type="button">Manage</button>
         <button class="linkish" id="signOut" type="button">Sign out</button>
       </header>
 
@@ -68,6 +69,67 @@
         <div><span class="dot off"></span> Offline</div>
       </div>
     </main>
+  </div>
+
+  <!-- ---------------- guard management ---------------- -->
+  <div id="manage" class="modal" hidden>
+    <div class="sheet">
+      <header class="sheet-head">
+        <h2>Guards</h2>
+        <button class="linkish" id="manageClose" type="button">Close</button>
+      </header>
+
+      <div class="sheet-body">
+        <form id="guardForm" class="gform">
+          <input type="hidden" id="gEditing" value="" />
+          <div class="grid">
+            <div>
+              <label for="gUser">Username</label>
+              <input id="gUser" type="text" required placeholder="3" />
+            </div>
+            <div>
+              <label for="gPass">Password</label>
+              <input id="gPass" type="text" placeholder="3" />
+            </div>
+            <div class="wide">
+              <label for="gName">Full name</label>
+              <input id="gName" type="text" required placeholder="Sunil Perera" />
+            </div>
+            <div>
+              <label for="gBadge">Badge</label>
+              <input id="gBadge" type="text" placeholder="G-001" />
+            </div>
+            <div>
+              <label for="gSite">Site</label>
+              <input id="gSite" type="text" placeholder="Head Office" />
+            </div>
+            <div class="wide">
+              <label for="gPhone">Phone</label>
+              <input id="gPhone" type="text" placeholder="+94770000001" />
+            </div>
+          </div>
+          <p class="hint" id="gHint">The guard types the username and password into the app. Nothing else.</p>
+          <div class="actions">
+            <button class="btn-primary" id="gSave" type="submit">Add guard</button>
+            <button class="btn-ghost" id="gCancel" type="button" hidden>Cancel</button>
+          </div>
+          <div class="error" id="gError"></div>
+          <div class="ok" id="gOk"></div>
+        </form>
+
+        <div class="tablewrap">
+          <table id="gTable">
+            <thead>
+              <tr>
+                <th>User</th><th>Name</th><th>Badge</th><th>Site</th>
+                <th class="num">Positions</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="gBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
